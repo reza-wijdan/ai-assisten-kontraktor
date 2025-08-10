@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pymysql
+python-dotenv
+sentence-transformers
+faiss-cpu
+pandas
+fuzzywuzzy[speedup]
+pydantic
+python-multipart
+alembic
+rapidfuzz

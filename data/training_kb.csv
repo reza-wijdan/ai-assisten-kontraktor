@@ -1,0 +1,13 @@
+question,intent
+"berapa stok truk yang tersedia?",check_stock
+"stok truk ada berapa sekarang?",check_stock
+"ada berapa unit dump truck?",check_stock
+"stok dump truck masih ada?",check_stock
+"min, truknya ada berapa?",check_stock
+"stok truknya tinggal berapa nih?",check_stock
+"berapa harga excavator per hari?",ask_price
+"berapa biaya sewa dump truck per hari?",ask_price
+"saya mau sewa truk 3 hari",booking
+"pesan excavator untuk besok",booking
+"saya mau booking bulldozer",booking
+"mau rental crane untuk proyek",booking
