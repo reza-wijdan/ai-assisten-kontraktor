@@ -73,7 +73,7 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
                     break
 
     # Logika tambahan untuk konten di luar konteks
-    VALID_INTENTS = {"booking", "check_stock", "ask_price", "closing_keyword", "closing_confirmation", "complaint_keyword"}
+    VALID_INTENTS = {"booking", "check_stock", "ask_price", "closing_keyword", "closing_confirmation", "complaint_keyword", "greeting"}
     if intent not in VALID_INTENTS and not equipments:
         answer = "Maaf saya tidak mengerti hal tersebut."
         save_message(db, user_id, answer, SenderEnum.ai)
@@ -127,6 +127,9 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
                 "Terima kasih telah melaporkan masalah pada alat kami. "
                 "Tim teknis kami akan segera menindaklanjuti dan menghubungi Anda."
             )
+
+    elif intent == "greeting":
+        answer = "Selamat datang! Ada yang bisa saya bantu?"
 
     elif intent == "closing_keyword":
         answer = "Ada lagi yang bisa saya bantu?"

@@ -52,28 +52,17 @@ COMPLAINT_KEYWORDS = [
     "mogok", "macet", "ngadat"
 ]
 
+GREETING_KEYWORDS = [
+    # Salam pembuka formal dan santai
+    "halo", "hai", "hallo", "selamat pagi", "selamat siang", "selamat sore", "selamat malam",
+    "hey", "hi", "hello", "apa kabar", "apa kabarnya"
+]
+
 def preprocess(text: str) -> str:
     t = text.lower().strip()
     t = re.sub(r"[^0-9a-zA-Z\u00C0-\u017F\s]", " ", t)
     t = re.sub(r"\s+", " ", t)
     return t
-
-# def keyword_intent(text: str):
-#     t = preprocess(text)
-#     # check booking first (explicit)
-#     for kw in BOOKING_KEYWORDS:
-#         if kw in t:
-#             return "booking"
-#     for kw in PRICE_KEYWORDS:
-#         if kw in t:
-#             return "ask_price"
-#     for kw in STOCK_KEYWORDS:
-#         if kw in t:
-#             return "check_stock"
-#     for kw in CLOSING_KEYWORDS:
-#         if kw in t:
-#             return "closing_keyword"
-#     return None
 
 def semantic_match(text: str, top_k: int = 3):
     v = MODEL.encode([text], convert_to_numpy=True)
@@ -137,6 +126,11 @@ def keyword_intent(text: str):
         for kw in COMPLAINT_KEYWORDS:
             if fuzz.ratio(w, kw) >= 80:
                 return "complaint_keyword"
+    
+    for w in words:
+        for kw in GREETING_KEYWORDS:
+            if fuzz.ratio(w, kw) >= 80:
+                return "greeting"
 
     # Jika tidak ketemu, fallback cek full keyword in text (original)
     for kw in BOOKING_KEYWORDS:
@@ -157,5 +151,8 @@ def keyword_intent(text: str):
     for kw in COMPLAINT_KEYWORDS:
         if kw in t:
             return "complaint_keyword"
+    for kw in GREETING_KEYWORDS:
+        if kw in t:
+            return "greeting"
 
     return None
