@@ -24,7 +24,7 @@ PRICE_KEYWORDS = [
 
 BOOKING_KEYWORDS = [
     # Bahasa Indonesia formal
-    "sewa", "booking", "pesan", "pemesanan", "rental", "reservasi", "ambil",
+    "booking", "pesan", "pemesanan", "rental", "reservasi", "ambil",
     # Bahasa santai / gaul
     "sewain", "nyewa", "nyewa dong", "pesan dong", "pesen", "pengen sewa", "pengen booking", "sewain ga", "bisa booking",
     # Bahasa Inggris
@@ -58,9 +58,18 @@ GREETING_KEYWORDS = [
     "hey", "hi", "hello", "apa kabar", "apa kabarnya"
 ]
 
+PRICE_SEWA_PATTERNS = [
+    "berapa sewa", "sewa berapa", "biaya sewa", "tarif sewa", "harga sewa"
+]
+
+def normalize_repeated_chars(text: str) -> str:
+    # Ganti huruf berulang 2x+ menjadi satu huruf
+    return re.sub(r'(.)\1{2,}', r'\1', text)
+
 def preprocess(text: str) -> str:
     t = text.lower().strip()
     t = re.sub(r"[^0-9a-zA-Z\u00C0-\u017F\s]", " ", t)
+    t = normalize_repeated_chars(t)
     t = re.sub(r"\s+", " ", t)
     return t
 
@@ -97,60 +106,71 @@ def keyword_intent(text: str):
     t = preprocess(text)
     words = t.split()
 
-    # cek booking dulu dengan fuzzy per kata
+    # 1️⃣ Cek price_sewa dulu (supaya "berapa sewa" tidak nyangkut di booking)
     for w in words:
-        for kw in BOOKING_KEYWORDS:
+        for kw in PRICE_SEWA_PATTERNS:
             if fuzz.ratio(w, kw) >= 80:
-                return "booking"
+                return "price_sewa"
 
+    for kw in PRICE_SEWA_PATTERNS:
+        if kw in t:
+            return "price_sewa"
+
+    # 2️⃣ Baru cek ask_price biasa
     for w in words:
         for kw in PRICE_KEYWORDS:
             if fuzz.ratio(w, kw) >= 80:
                 return "ask_price"
+    for kw in PRICE_KEYWORDS:
+        if kw in t:
+            return "ask_price"
 
+    # 3️⃣ Lalu cek booking
+    for w in words:
+        for kw in BOOKING_KEYWORDS:
+            if fuzz.ratio(w, kw) >= 80:
+                return "booking"
+    for kw in BOOKING_KEYWORDS:
+        if kw in t:
+            return "booking"
+
+    # 4️⃣ Sisanya cek intent lain seperti stok, closing, dsb
     for w in words:
         for kw in STOCK_KEYWORDS:
             if fuzz.ratio(w, kw) >= 80:
                 return "check_stock"
+    for kw in STOCK_KEYWORDS:
+        if kw in t:
+            return "check_stock"
 
     for w in words:
         for kw in CLOSING_KEYWORDS:
             if fuzz.ratio(w, kw) >= 80:
                 return "closing_keyword"
+    for kw in CLOSING_KEYWORDS:
+        if kw in t:
+            return "closing_keyword"
 
     for w in words:
         for kw in CLOSING_CONFIRMATION_KEYWORDS:
             if fuzz.ratio(w, kw) >= 80:
                 return "closing_confirmation"
+    for kw in CLOSING_CONFIRMATION_KEYWORDS:
+        if kw in t:
+            return "closing_confirmation"
+
     for w in words:
         for kw in COMPLAINT_KEYWORDS:
             if fuzz.ratio(w, kw) >= 80:
                 return "complaint_keyword"
-    
+    for kw in COMPLAINT_KEYWORDS:
+        if kw in t:
+            return "complaint_keyword"
+
     for w in words:
         for kw in GREETING_KEYWORDS:
             if fuzz.ratio(w, kw) >= 80:
                 return "greeting"
-
-    # Jika tidak ketemu, fallback cek full keyword in text (original)
-    for kw in BOOKING_KEYWORDS:
-        if kw in t:
-            return "booking"
-    for kw in PRICE_KEYWORDS:
-        if kw in t:
-            return "ask_price"
-    for kw in STOCK_KEYWORDS:
-        if kw in t:
-            return "check_stock"
-    for kw in CLOSING_KEYWORDS:
-        if kw in t:
-            return "closing_keyword"
-    for kw in CLOSING_CONFIRMATION_KEYWORDS:
-        if kw in t:
-            return "closing_confirmation"
-    for kw in COMPLAINT_KEYWORDS:
-        if kw in t:
-            return "complaint_keyword"
     for kw in GREETING_KEYWORDS:
         if kw in t:
             return "greeting"

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from ..schemas import QueryRequest, QueryResponse
 from ..intent_recognizer import recognize_intent
 from ..database import SessionLocal
-from ..utils import find_equipment_by_name, aggregate_stock
+from ..utils import find_equipment_by_name, aggregate_stock, LIST_ALL_KEYWORDS, preprocess
 from sqlalchemy.orm import Session
 from ..services.conversation import save_message, get_recent_history
 from ..models import SenderEnum
@@ -62,6 +62,25 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
             "show_order_form": False
         }
 
+    if contains_fuzzy_keyword(user_text, LIST_ALL_KEYWORDS, threshold=80):
+        all_equipments = find_equipment_by_name(db, "", limit=50)  # Ambil semua data
+        if all_equipments:
+            lines = [
+                f"{e.name} — stok: {e.available_stock or e.stock} unit"
+                for e in all_equipments
+            ]
+            answer = "Berikut semua alat yang tersedia:\n" + "\n".join(lines)
+        else:
+            answer = "Saat ini belum ada data alat yang tersedia."
+        
+        save_message(db, user_id, answer, SenderEnum.ai)
+        return {
+            "intent": "list_all_equipment",
+            "answer": answer,
+            "meta": meta,
+            "show_order_form": False
+        }    
+
     # Cari produk yang dimaksud
     equipments = find_equipment_by_name(db, user_text, limit=10)
     if not equipments:
@@ -73,7 +92,7 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
                     break
 
     # Logika tambahan untuk konten di luar konteks
-    VALID_INTENTS = {"booking", "check_stock", "ask_price", "closing_keyword", "closing_confirmation", "complaint_keyword", "greeting"}
+    VALID_INTENTS = {"booking", "check_stock", "ask_price", "closing_keyword", "closing_confirmation", "complaint_keyword", "greeting", "price_sewa"}
     if intent not in VALID_INTENTS and not equipments:
         answer = "Maaf saya tidak mengerti hal tersebut."
         save_message(db, user_id, answer, SenderEnum.ai)
@@ -83,11 +102,21 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
             "meta": meta,
             "show_order_form": False
         }
+    
+    if intent in ["check_stock", "ask_price", "price_sewa"] and not equipments:
+        answer = "Mohon maaf, alat tersebut belum tersedia."
+        save_message(db, user_id, answer, SenderEnum.ai)
+        return {
+            "intent": intent,
+            "answer": answer,
+            "meta": meta,
+            "show_order_form": False
+        }
 
     ORDER_KEYWORDS = ["pesan", "beli", "order", "booking", "mau ambil", "mau pesan"]
     show_order_form = False
 
-    if intent == "booking" or any(kw in user_text for kw in ORDER_KEYWORDS):
+    if intent == "booking":
         product_name = equipments[0].name if equipments else "alat yang dimaksud"
         answer = (f"Baik, saya akan bantu menyiapkan form pemesanan untuk {product_name}.\n"
                   "Tolong sebutkan: jumlah unit, tanggal mulai sewa, dan durasi.")
@@ -105,7 +134,7 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
             total = aggregate_stock(equipments)
             answer = "Berikut stok yang saya temukan:\n" + "\n".join(lines) + f"\nTotal (gabungan): {total} unit."
 
-    elif intent == "ask_price":
+    elif intent in ["ask_price", "price_sewa"]:
         if not equipments:
             answer = "Sebutkan nama atau model alat kontraktor yang ingin dicek harganya, ya."
         else:

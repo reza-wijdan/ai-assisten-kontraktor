@@ -9,7 +9,7 @@ pip install -r requirements.txt
 Copy .env.example → .env dan isi DATABASE_URL
 
 Jalankan:
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 
 
 POST http://127.0.0.1:8000/assistant/query
