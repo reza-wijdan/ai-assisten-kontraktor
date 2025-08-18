@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from ..schemas import QueryRequest, QueryResponse
 from ..intent_recognizer import recognize_intent
 from ..database import SessionLocal
-from ..utils import find_equipment_by_name, aggregate_stock, LIST_ALL_KEYWORDS, preprocess
+from ..utils import find_equipment_by_name, aggregate_stock, LIST_ALL_KEYWORDS, preprocess, fuzzy_find_equipment
 from sqlalchemy.orm import Session
 from ..services.conversation import save_message, get_recent_history
 from ..models import SenderEnum
@@ -83,6 +83,11 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
 
     # Cari produk yang dimaksud
     equipments = find_equipment_by_name(db, user_text, limit=10)
+
+    # Kalau tidak ketemu, coba fuzzy
+    if not equipments:
+        equipments = fuzzy_find_equipment(db, user_text, limit=5)
+
     if not equipments:
         for h in history:
             if h.sender == SenderEnum.user:

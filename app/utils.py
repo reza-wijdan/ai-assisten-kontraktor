@@ -79,6 +79,22 @@ def aggregate_stock(equipments):
             total += int(e.stock or 0)
     return total
 
+def fuzzy_find_equipment(db, text, limit=5, threshold=70):
+    # Ambil semua nama alat dari database
+    all_equipments = find_equipment_by_name(db, "", limit=100)
+    names = [e.name for e in all_equipments]
+
+    # Cari kandidat dengan fuzzy matching
+    matches = process.extract(text, names, scorer=fuzz.partial_ratio, limit=limit)
+    best_matches = [m for m in matches if m[1] >= threshold]
+
+    if not best_matches:
+        return []
+
+    # Ambil objek alat yang sesuai
+    matched_names = [m[0] for m in best_matches]
+    return [e for e in all_equipments if e.name in matched_names]
+
 def detect_type_from_text(value: str):
     """
     Mendeteksi tipe data dari string input.
