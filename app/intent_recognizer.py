@@ -26,7 +26,7 @@ BOOKING_KEYWORDS = [
     # Bahasa Indonesia formal
     "booking", "pesan", "pemesanan", "rental", "reservasi", "ambil",
     # Bahasa santai / gaul
-    "sewain", "nyewa", "nyewa dong", "pesan dong", "pesen", "pengen sewa", "pengen booking", "sewain ga", "bisa booking",
+    "sewain", "nyewa", "nyewa dong", "pesan dong", "pesen", "pengen sewa", "pengen booking", "sewain ga", "bisa booking", "pesanan", "memesan", "pemesan"
     # Bahasa Inggris
     "rent", "book", "reserve", "order", "take", "get", "renting", "hire", "lease"
 ]
