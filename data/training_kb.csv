@@ -1,13 +1,101 @@
 question,intent
-"berapa stok truk yang tersedia?",check_stock
-"stok truk ada berapa sekarang?",check_stock
-"ada berapa unit dump truck?",check_stock
-"stok dump truck masih ada?",check_stock
+berapa stok truk yang tersedia?,check_stock
+stok truk ada berapa sekarang?,check_stock
+ada berapa unit dump truck?,check_stock
+stok dump truck masih ada?,check_stock
 "min, truknya ada berapa?",check_stock
-"stok truknya tinggal berapa nih?",check_stock
-"berapa harga excavator per hari?",ask_price
-"berapa biaya sewa dump truck per hari?",ask_price
-"saya mau sewa truk 3 hari",booking
-"pesan excavator untuk besok",booking
-"saya mau booking bulldozer",booking
-"mau rental crane untuk proyek",booking
+stok truknya tinggal berapa nih?,check_stock
+berapa stok excavator sekarang?,check_stock
+berapa unit crane tersedia?,check_stock
+stok road roller ada berapa?,check_stock
+berapa ketersediaan alat berat?,check_stock
+masih ada excavator gak?,check_stock
+apakah ada bulldozer tersisa?,check_stock
+berapa stok alat proyek?,check_stock
+berapa banyak unit yang ready?,check_stock
+stok sewa alat berat ada berapa?,check_stock
+berapa harga excavator per hari?,ask_price
+berapa biaya sewa dump truck per hari?,ask_price
+berapa harga sewa bulldozer?,ask_price
+berapa rental crane per bulan?,ask_price
+berapa tarif sewa truk?,ask_price
+berapa harga sewa alat berat?,ask_price
+berapa biaya sewa per unit excavator?,ask_price
+harga road roller per minggu berapa?,ask_price
+berapa biaya rental crane harian?,ask_price
+berapa tarif bulanan excavator?,ask_price
+berapa harga untuk backhoe loader?,ask_price
+berapa biaya per jam bulldozer?,ask_price
+berapa ongkos sewa alat proyek?,ask_price
+harga sewa dump truck per minggu?,ask_price
+berapa biaya rental peralatan berat?,ask_price
+saya mau sewa truk 3 hari,booking
+pesan excavator untuk besok,booking
+saya mau booking bulldozer,booking
+mau rental crane untuk proyek,booking
+bisa booking alat berat sekarang?,booking
+mau pesan excavator 1 unit,booking
+saya butuh sewa dump truck,booking
+tolong booking 2 unit crane,booking
+bisa pesan road roller hari ini?,booking
+saya mau rental alat berat minggu depan,booking
+pesan alat berat untuk proyek jalan,booking
+mau booking excavator di CV Surya Abadi,booking
+saya butuh crane untuk proyek gedung,booking
+pesan bulldozer untuk konstruksi,booking
+tolong rental excavator segera,booking
+cukup itu saja,closing_keyword
+"sudah, terima kasih",closing_keyword
+oke segitu aja,closing_keyword
+ya udah makasih,closing_keyword
+itu aja dulu,closing_keyword
+oke selesai,closing_keyword
+udah beres makasih,closing_keyword
+sampai sini aja,closing_keyword
+oke tutup percakapan,closing_keyword
+"cukup, bye",closing_keyword
+bisa tutup pesanan saya?,closing_confirmation
+apakah booking saya sudah selesai?,closing_confirmation
+sudah dikonfirmasi pesanan saya?,closing_confirmation
+tolong konfirmasi pemesanan,closing_confirmation
+apa booking saya sudah fix?,closing_confirmation
+apakah order saya sudah tercatat?,closing_confirmation
+pesanan saya udah diproses?,closing_confirmation
+sudah diinput pesanan saya?,closing_confirmation
+apakah pemesanan saya valid?,closing_confirmation
+tolong cek konfirmasi pesanan,closing_confirmation
+kenapa alat berat saya belum sampai,complaint_keyword
+pesanan saya kok belum datang?,complaint_keyword
+alatnya telat dikirim,complaint_keyword
+kenapa barangnya belum ready?,complaint_keyword
+saya komplain soal pengiriman,complaint_keyword
+alat berat saya rusak,complaint_keyword
+excavator yang datang tidak berfungsi,complaint_keyword
+pesanan salah kirim,complaint_keyword
+kenapa unitnya tidak sesuai?,complaint_keyword
+saya kecewa dengan pelayanannya,complaint_keyword
+alatnya tidak sesuai pesanan,complaint_keyword
+pengiriman sangat lambat,complaint_keyword
+mesin tidak nyala saat digunakan,complaint_keyword
+saya mau lapor kerusakan alat,complaint_keyword
+kenapa pesanan saya dibatalkan?,complaint_keyword
+halo,greeting
+selamat pagi,greeting
+selamat siang,greeting
+selamat sore,greeting
+selamat malam,greeting
+hai,greeting
+assalamualaikum,greeting
+pagi,greeting
+siang,greeting
+sore,greeting
+berapa harga sewa excavator?,price_sewa
+berapa biaya sewa crane?,price_sewa
+berapa harga sewa alat berat per bulan?,price_sewa
+berapa tarif sewa bulldozer?,price_sewa
+berapa harga rental dump truck?,price_sewa
+berapa ongkos sewa crane per hari?,price_sewa
+berapa harga sewa backhoe?,price_sewa
+berapa biaya rental road roller?,price_sewa
+berapa harga per jam excavator?,price_sewa
+berapa tarif sewa alat proyek?,price_sewa
