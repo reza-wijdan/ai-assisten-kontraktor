@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from ..schemas import QueryRequest, QueryResponse
-from ..intent_recognizer import recognize_intent
+from ..intent_recognizer import recognize_intent, plot_rf_boundary
 from ..database import SessionLocal
 from ..utils import find_equipment_by_name, aggregate_stock, LIST_ALL_KEYWORDS, preprocess, fuzzy_find_equipment
 from sqlalchemy.orm import Session
@@ -29,7 +29,7 @@ def contains_fuzzy_keyword(text, keywords, threshold=80):
 def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
     user_id = req.user_id if hasattr(req, "user_id") else "anonymous"
     user_text = req.message.lower().strip()
-
+    
     # Simpan pertanyaan user
     save_message(db, user_id, user_text, SenderEnum.user)
 
@@ -98,8 +98,8 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
 
     # Logika tambahan untuk konten di luar konteks
     VALID_INTENTS = {"booking", "check_stock", "ask_price", "closing_keyword", "closing_confirmation", "complaint_keyword", "greeting", "price_sewa"}
-    if intent not in VALID_INTENTS and not equipments:
-        answer = "Maaf saya tidak mengerti hal tersebut."
+    if intent == "unknown" and not equipments:
+        answer = "Maaf, saya tidak mengerti maksud Anda."
         save_message(db, user_id, answer, SenderEnum.ai)
         return {
             "intent": "unknown_out_of_context",
@@ -107,6 +107,7 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
             "meta": meta,
             "show_order_form": False
         }
+
     
     if intent in ["check_stock", "ask_price", "price_sewa"] and not equipments:
         answer = "Mohon maaf, alat tersebut belum tersedia."
@@ -168,11 +169,17 @@ def chat_endpoint(req: QueryRequest, db: Session = Depends(get_db)):
     elif intent == "closing_keyword":
         answer = "Ada lagi yang bisa saya bantu?"
 
+    elif intent == "closing_confirmation":
+        answer = "Terima kasih sudah menggunakan layanan kami. Semoga harimu menyenangkan!"    
+
+    elif intent == "unknown" and not equipments:
+        answer = "Maaf, saya tidak mengerti maksud Anda."    
+
     else:
-        answer = "(Berdasarkan percakapan sebelumnya) Maaf, saya belum mengerti. Bisa jelaskan lebih detail?"
+        answer = "Maaf, saya belum mengerti. Bisa jelaskan lebih detail?"
 
     save_message(db, user_id, answer, SenderEnum.ai)
-
+    plot_rf_boundary()
     return {
         "intent": intent,
         "answer": answer,

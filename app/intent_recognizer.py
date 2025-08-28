@@ -1,8 +1,17 @@
-from .embeddings import MODEL, INDEX, KB_INTENTS, KB_TEXTS
+from .embeddings import MODEL, INDEX, KB_INTENTS, KB_TEXTS, CLF
 import faiss
 import numpy as np
 import re
 from rapidfuzz import fuzz
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report
+
+
 
 STOCK_KEYWORDS = [
     # Bahasa Indonesia formal
@@ -88,18 +97,26 @@ def recognize_intent(text: str, threshold: float = 0.55):
     # 1) keyword (fast)
     kw = keyword_intent(text)
     if kw:
-        return {"intent": kw, "source": "keyword", "score": None}
+        return {"intent": kw, "source": "keyword", "score": 1.0}
 
-    # 2) semantic
+    # 2) semantic (FAISS)
     sem = semantic_match(text, top_k=3)
     if sem:
         best = sem[0]
         if best["score"] >= threshold:
-            return {"intent": best["intent"], "source": "semantic", "score": best["score"], "example": best.get("example")}
-        # low confidence semantic -> still return best with low flag
-        return {"intent": best["intent"], "source": "semantic_low", "score": best["score"], "example": best.get("example")}
+            return {"intent": best["intent"], "source": "semantic", "score": best["score"]}
+        return {"intent": "unknown", "source": "semantic_low", "score": best["score"]}
 
-    return {"intent": "unknown", "source": "none", "score": None}
+    # 3) random forest
+    X = MODEL.encode([text])
+    proba = CLF.predict_proba(X)[0]
+    max_proba = float(proba.max())
+    pred_int = CLF.classes_[proba.argmax()]
+
+    if max_proba >= 0.6:  # set threshold 0.6
+        return {"intent": pred_int, "source": "random_forest", "score": max_proba}
+    else:
+        return {"intent": "unknown", "source": "random_forest_low", "score": max_proba}
 
 
 def keyword_intent(text: str):
@@ -153,11 +170,12 @@ def keyword_intent(text: str):
 
     for w in words:
         for kw in CLOSING_CONFIRMATION_KEYWORDS:
-            if fuzz.ratio(w, kw) >= 80:
+            if abs(len(w) - len(kw)) <= 2 and fuzz.ratio(w, kw) >= 90:
                 return "closing_confirmation"
+
     for kw in CLOSING_CONFIRMATION_KEYWORDS:
-        if kw in t:
-            return "closing_confirmation"
+        if kw in t:  # exact substring match
+            return "closing_confirmation"        
 
     for w in words:
         for kw in COMPLAINT_KEYWORDS:
@@ -169,10 +187,68 @@ def keyword_intent(text: str):
 
     for w in words:
         for kw in GREETING_KEYWORDS:
-            if fuzz.ratio(w, kw) >= 80:
+            if abs(len(w) - len(kw)) <= 2 and fuzz.ratio(w, kw) >= 90:
                 return "greeting"
+
     for kw in GREETING_KEYWORDS:
-        if kw in t:
+        if kw in t:  # exact substring match
             return "greeting"
 
     return None
+
+def plot_rf_boundary():
+    # --- 1. Encode teks ke embedding ---
+    X = MODEL.encode(KB_TEXTS)
+    y = KB_INTENTS
+
+    # --- 2. Encode label ke angka ---
+    le = LabelEncoder()
+    y_enc = le.fit_transform(y)
+
+    # --- 3. Reduksi dimensi ke 2D (biar bisa diplot) ---
+    pca = PCA(n_components=2)
+    X_2d = pca.fit_transform(X)
+
+    # --- 4. Train RandomForest di data 2D ---
+    rf = RandomForestClassifier(n_estimators=100, random_state=42)
+    rf.fit(X_2d, y_enc)
+
+    # --- 5. Evaluasi model ---
+    y_pred = rf.predict(X_2d)
+
+    acc = accuracy_score(y_enc, y_pred)
+    prec = precision_score(y_enc, y_pred, average="weighted", zero_division=0)
+    rec = recall_score(y_enc, y_pred, average="weighted", zero_division=0)
+    f1 = f1_score(y_enc, y_pred, average="weighted", zero_division=0)
+    cm = confusion_matrix(y_enc, y_pred)
+
+    # print("\n📊 Evaluasi RandomForest (PCA 2D):")
+    # print(f"Accuracy : {acc:.2f}")
+    # print(f"Precision: {prec:.2f}")
+    # print(f"Recall   : {rec:.2f}")
+    # print(f"F1-Score : {f1:.2f}")
+    # print("\nConfusion Matrix:")
+    # print(cm)
+    # print("\nClassification Report:")
+    # print(classification_report(y_enc, y_pred, target_names=le.classes_))
+
+    # --- 6. Plot decision boundary ---
+    x_min, x_max = X_2d[:, 0].min() - 1, X_2d[:, 0].max() + 1
+    y_min, y_max = X_2d[:, 1].min() - 1, X_2d[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 300),
+                         np.linspace(y_min, y_max, 300))
+
+    Z = rf.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+
+    plt.contourf(xx, yy, Z, alpha=0.3, cmap="tab10")
+    scatter = plt.scatter(X_2d[:, 0], X_2d[:, 1], c=y_enc, s=60, edgecolor="k", cmap="tab10")
+
+    handles, _ = scatter.legend_elements()
+    plt.legend(handles, le.classes_, title="Intent")
+
+    plt.title("Decision Boundary - Random Forest (PCA 2D)")
+    plt.xlabel("PC1")
+    plt.ylabel("PC2")
+    plt.savefig("rf_boundary2.png")
+    plt.close()

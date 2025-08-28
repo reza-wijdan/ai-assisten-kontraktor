@@ -3,6 +3,7 @@ import numpy as np
 import faiss
 from .kb_loader import load_kb
 from .config import EMBEDDING_MODEL
+from sklearn.ensemble import RandomForestClassifier
 
 KB_ENTRIES = load_kb()
 
@@ -25,3 +26,10 @@ faiss.normalize_L2(EMBS)
 DIM = EMBS.shape[1]
 INDEX = faiss.IndexFlatIP(DIM)
 INDEX.add(EMBS)
+
+# --- Random Forest Classifier ---
+# train dengan embedding (sebelum normalisasi agar bisa dipakai di classifier)
+clf = RandomForestClassifier(n_estimators=100, random_state=42)
+clf.fit(EMBS, KB_INTENTS)
+
+CLF = clf
